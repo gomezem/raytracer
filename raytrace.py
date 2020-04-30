@@ -33,7 +33,12 @@ class Vector( object ):
 	def toScaled(self, scale:float): # vector scaled
 		return Vector(self.x * scale, self.y * scale, self.z * scale)
 
-        # Provide "overridden methods via the "__operation__" notation; allows you to do, for example, a+b, a-b, a*b
+	# def directionalLight(self, color:Vector, strength:float, direction:Vector):
+	# 	Light.__init__(self, color, strength)
+	# 	self.direction = direction
+        
+		
+		# Provide "overridden methods via the "__operation__" notation; allows you to do, for example, a+b, a-b, a*b
 	def __add__(self, b):  # add another vector (b) to a given vector (self)
 		return Vector(self.x + b.x, self.y+b.y, self.z+b.z)
 
@@ -94,6 +99,33 @@ class Intersection( object ):
 		self.n = normal
 		self.obj = obj
 
+class DirectionalLight():
+	def __init__(self, color:Vector, strength:float, direction:Vector):
+		Light.__init__(self, color, strength)
+		self.direction = direction
+		
+	# def __sub__(self, b):  # subtract another vector (b) from a given vector (self)
+	# 		return Vector(self.x-b.x, self.y-b.y, self.z-b.z)
+
+class Light:
+	def __init__(self, color:Vector, strength:float):
+		self.color = color
+		self.strength = strength
+
+class Point3D:
+    def __init__(self, x:float, y:float, z:float):
+       self.vector = Vector(x,y,z)
+
+    def fromVector(vector:Vector):
+        return Point3D(vector.x, vector.y, vector.z)
+
+    def distance(self, other):
+        vectorDifference = self.minus(other)
+        return vectorDifference.length()
+
+    def minus(self, other):
+        return self.vector.minus(other.vector)
+
 def testRay(ray, objects, ignore=None):
 	intersect = Intersection( Vector(0,0,0), -1, Vector(0,0,0), None)
 
@@ -112,15 +144,18 @@ def trace(ray, objects, light, maxRecur):
 	intersect = testRay(ray, objects)
 
 	#diffuse
-	toLight = lightRay.d.toScaled(-1)
-	# product = toLight.dot.normal
-	# if product < 0:
-		# product = 0
-	# lightDiffuse = col.toScaled(product)
-	# diffuse = diffuse.plus(lightDiffuse)
-	diffuse = .03
+	diffuse = Vector(0,0,0)
+	lightDiffuse = Vector(0,0,0)
+	toLight = light.direction.toScaled(-1)
+	normal = toLight.normal()
+	product = toLight.dot(normal)
+	if product < 0:	
+		product = 0
+	lightDiffuse = light.color.toScaled(product)
+	diffuse = diffuse.__add__(lightDiffuse)
+	# diffuse = .03
 
-	color = AMBIENT + diffuse
+	color = AMBIENT.__add__(diffuse)
 
 	if intersect.d == -1:
 		col = Vector(color,color,color)
@@ -153,12 +188,17 @@ objs.append(Plane( Vector(0,0,-12), Vector(0,0,1), Vector(255,255,255)))  # poin
 
 lightSource = Vector(10,0,0) #light position
 
+lightColor = Vector(0,0,255)
+
+light = DirectionalLight(lightColor, 1, lightSource)
+# light = directionalLight(lightColor, 1, lightSource)
+
 img = Image.new("RGB",(500,500))
 cameraPos = Vector(0,0,20)
 for x in range(500):  # loop over all x values for our image
 	print(x)   # provide some feedback to the user about our progress
 	for y in range(500):  # loop over all y values
 		ray = Ray( cameraPos, (Vector(x/50.0-5,y/50.0-5,0)-cameraPos).normal())
-		col = trace(ray, objs, lightSource, 10)
+		col = trace(ray, objs, light, 10)
 		img.putpixel((x,499-y),gammaCorrection(col,GAMMA_CORRECTION))
 img.save("trace.png","PNG")  # save the image as a .png (or "BMP", but it produces a much larger file)
