@@ -157,8 +157,8 @@ def trace(ray, objects, light, maxRecur):
 
     # set up diffuse
     ambient = Vector(.1, .1, .1)
-    diffuse = Vector(.5, 0, 0)
-	
+    diffuse = Vector(0, 0, 0)
+
     lightDiffuse = Vector(0, 0, 0)
     toLight = light.direction.toScaled(-1)
     product = toLight.dot(intersect.n)
@@ -174,19 +174,20 @@ def trace(ray, objects, light, maxRecur):
     color = ambient.__add__(diffuse)
     # print("Ambient and diffuse x: ", color.x)
     # print("Ambient and diffuse y: ", color.y)
-    # print("Ambient and diffuse z: ", color.z)  
+    # print("Ambient and diffuse z: ", color.z)
 
+    # if it is the shadow
     if intersect.d == -1:
-        col = Vector(color, color, color)
+        col = Vector(.1, .1, .1)
 
+    # takes care of the shadows (but not ground shadow)
     elif intersect.n.dot(light.direction - intersect.p) < 0:
-    	col = intersect.obj.col.simpleMultiply(color)
-    	# print("Multiply intersect object color and color x: ", color.x)
-    	# print("Multiply intersect object color and color y: ", color.y)
-    	# print("Multiply intersect object color and color z: ", color.z)
+        col = intersect.obj.col.simpleMultiply(color)
+        # print("Multiply intersect object color and color x: ", color.x)
+        # print("Multiply intersect object color and color y: ", color.y)
+        # print("Multiply intersect object color and color z: ", color.z)
 
     else:
-        # finding normal of the ray
         lightRay = Ray(intersect.p, (light.direction-intersect.p).normal())
         if testRay(lightRay, objects, intersect.obj).d == -1:
             lightIntensity = 1000.0 / \
@@ -227,8 +228,6 @@ lightSource = Vector(10, 0, 0)  # light position
 lightColor = Vector(255, 0, 0)  # light color
 
 light = DirectionalLight(lightColor, 1, lightSource)
-light2 = DirectionalLight(Vector(0, 0, 255), 1, Vector(1, 0, 0))
-
 
 img = Image.new("RGB", (500, 500))
 cameraPos = Vector(0, 0, 20)
