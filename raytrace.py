@@ -155,8 +155,8 @@ def trace(ray, objects, light, maxRecur):
     # print("Intersect color: ", intersect.obj.col.y)
     # print("Intersect color: ", intersect.obj.col.z)
 
-    # set up diffuse
-    ambient = Vector(.1, .1, .1)
+    # set up diffuse and ambient on range [0,1]
+    ambient = Vector(.1, .1, .1)  # ambient light is .1
     diffuse = Vector(0, 0, 0)
 
     lightDiffuse = Vector(0, 0, 0)
@@ -164,19 +164,20 @@ def trace(ray, objects, light, maxRecur):
     product = toLight.dot(intersect.n)
     if product < 0:
         product = 0
-    lightDiffuse = light.color.toScaled(product)
+    lightDiffuse = (light.color.toScaled(product))
+    lightDiffuse = (lightDiffuse.toScaled(1/255))
     diffuse = diffuse.__add__(lightDiffuse)
 
-    # print("Diffuse x:", diffuse.x)
-    # print("Diffuse y:", diffuse.y)
-    # print("Diffuse z:", diffuse.z)
+    print("Diffuse x:", diffuse.x)
+    print("Diffuse y:", diffuse.y)
+    print("Diffuse z:", diffuse.z)
 
     color = ambient.__add__(diffuse)
     # print("Ambient and diffuse x: ", color.x)
     # print("Ambient and diffuse y: ", color.y)
     # print("Ambient and diffuse z: ", color.z)
 
-    # if it is the shadow
+    # if it is the ground shadow
     if intersect.d == -1:
         col = Vector(.1, .1, .1)
 
@@ -193,7 +194,7 @@ def trace(ray, objects, light, maxRecur):
             lightIntensity = 1000.0 / \
                 (4*pi*(light.direction-intersect.p).magnitude()**2)
             col = intersect.obj.col * (max(intersect.n.normal().dot(
-                (light.direction - intersect.p).normal()*lightIntensity), .1))
+                (light.direction - intersect.p).normal()*lightIntensity), ambient.x))
             # print("Intersect col times the max of something and ambiencex: ", col.x)
             # print("Intersect col times the max of something and ambiencey: ", col.y)
             # print("Intersect col times the max of something and ambiencez: ", col.z)
